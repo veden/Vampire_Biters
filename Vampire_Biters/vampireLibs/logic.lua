@@ -32,7 +32,7 @@ function onLightLevel(vampires, surface)
                     vampires.clans[i].destroy()
                 end
             end
-        elseif (vampires.den.coffin ~= nil) and vampires.den.coffin.valid then -- if it is dark and nest exists, free them
+        elseif (vampires.den ~= nil) and (vampires.den.coffin ~= nil) and vampires.den.coffin.valid then -- if it is dark and nest exists, free them
             local denPosition = vampires.den.coffin.position
             vampires.lord = surface.create_entity({name = "medium-vampire", -- TODO replace with scaled lord age and evolution factor
                                                    position = denPosition,

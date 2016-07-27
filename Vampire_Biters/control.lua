@@ -9,10 +9,9 @@ local surface
 ---------------------------------------------
 -- Only called once on start of new world or when adding to a save without the mod
 function on_initialize()
-    game.create_force('vampire')
     -- create table in global persistance store
     global.vampires = {}
-    
+
     -- pass reference of global store to module local for faster reference
     vampires = global.vampires
 end
@@ -44,6 +43,11 @@ end
 function on_first_tick(event)
     -- create a module local variable of the surface for faster reference
     surface = game.surfaces[1]
+    
+    -- was getting errors with robot army and force creation events
+    if (game.forces["vampires"] ~= nil) then
+        game.create_force('vampires')
+    end
     
     -- run first tick
     on_running({tick = 0})
