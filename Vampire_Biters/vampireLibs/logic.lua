@@ -3,7 +3,7 @@ require "vampireUtils"
 
 function onLightLevel(vampires, surface)
     -- if light outside vampires die or lord saves surrounding minions by building nest
-    if (vampires ~= nil) then
+    if (vampires ~= nil) and (vampires.minions ~= nil) then
         if surface.darkness < 0.5 then
             if (vampires.lord ~= nil) and vampires.lord.valid then
                 local lordPosition = vampires.lord.position
@@ -25,6 +25,7 @@ function onLightLevel(vampires, surface)
                 -- as lord gets older it gets stronger
                 vampires.lordAge = vampires.lordAge + 1
             end
+            
             killVampires(vampires.minions)
             killVampires(vampires.freeMinions)
             for i=1, #vampires.clans do
@@ -66,12 +67,12 @@ end
 
 function raiseVampire(event, vampires, surface)
     -- if the vampire lord or coffin dies reset stats
-    if (event.entity == vampires.lord) or (event.entity == vampires.den.coffin) then
+    if (event.entity == vampires.lord) or ((vampires.den ~= nil) and (event.entity == vampires.den.coffin)) then
         vampires.lordAge = 0
         vampires.lord = nil
         vampires.den.guard = 0
     end
-    if (event.force ~= nil) and (event.force.name == "vampire") and (event.entity.force.name == "enemy") then
+    if (event.force ~= nil) and (event.force.name == "vampire") and ((event.entity.force ~= nil) and (event.entity.force.name == "enemy")) then
         local freeMinions = vampires.freeMinions
         local risenPosition = event.entity.position
         local entityType = event.entity.type
