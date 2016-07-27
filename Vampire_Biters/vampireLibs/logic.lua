@@ -2,69 +2,69 @@
 require "vampireUtils"
 
 function onLightLevel(vampires, surface)
-	surface = game.surfaces[1]
     -- if light outside vampires die or lord saves surrounding minions by building nest
-    if surface.darkness < 0.5 then
-        if (vampires.lord ~= nil) and vampires.lord.valid then
-            local lordPosition = vampires.lord.position
-            local den = surface.create_entity({name = "vampire-den",
-                                               position = lordPosition,
-                                               force = "vampire"})
-            local guards = surface.find_entities_filtered({area = boundingBox(lordPosition, 15),
-                                                           type = "unit",
-                                                           force = "vampire"})
-            for i=1, #guards do
-                local guard = guards[i]
-                if (guard.valid) then
-                    guard.destroy()
+    if (vampires ~= nil) then
+        if surface.darkness < 0.5 then
+            if (vampires.lord ~= nil) and vampires.lord.valid then
+                local lordPosition = vampires.lord.position
+                local den = surface.create_entity({name = "vampire-den",
+                                                   position = lordPosition,
+                                                   force = "vampire"})
+                local guards = surface.find_entities_filtered({area = boundingBox(lordPosition, 15), -- TODO increase capture size based on lordage and evolution
+                                                               type = "unit",
+                                                               force = "vampire"})
+                for i=1, #guards do
+                    local guard = guards[i]
+                    if (guard.valid) then
+                        guard.destroy()
+                    end
+                end
+                vampires.lord = nil
+                vampires.den.coffin = den
+                vampires.den.guards = #guards - 1
+                -- as lord gets older it gets stronger
+                vampires.lordAge = vampires.lordAge + 1
+            end
+            killVampires(vampires.minions)
+            killVampires(vampires.freeMinions)
+            for i=1, #vampires.clans do
+                if (vampires.clans[i] ~= nil) and (vampires.clans[i].valid) then
+                    vampires.clans[i].destroy()
                 end
             end
-            vampires.lord = nil
-            vampires.den.coffin = den
-            vampires.den.guards = #guards - 1
-            -- as lord gets older it gets stronger
-            vampires.lordAge = vampires.lordAge + 1
-        end
-        killVampires(vampires.minions)
-        killVampires(vampires.freeMinions)
-        for i=1, #vampires.clans do
-            if (vampires.clans[i] ~= nil) and (vampires.clans[i].valid) then
-                vampires.clans[i].destroy()
+        elseif (vampires.den.coffin ~= nil) and vampires.den.coffin.valid then -- if it is dark and nest exists, free them
+            local denPosition = vampires.den.coffin.position
+            vampires.lord = surface.create_entity({name = "medium-vampire", -- TODO replace with scaled lord age and evolution factor
+                                                   position = denPosition,
+                                                   force = "vampire"})
+            local freeMinions = vampires.freeMinions
+            local newGuardRow = denPosition.x + 5
+            denPosition.x = denPosition.x - 10
+            denPosition.y = denPosition.y - 5
+            for i=1, vampires.den.guards do
+                local vamp = surface.create_entity({name = "small-vampire", -- TODO replace with scaled evolution factor
+                                                    position = denPosition,
+                                                    force = "vampire"})
+                freeMinions[#freeMinions+1] = vamp
+                if (denPosition.x < newGuardRow) then
+                    denPosition.x = denPosition.x + 1
+                else
+                    denPosition.x = denPosition.x - 10
+                    denPosition.y = denPosition.y + 1
+                end
             end
-        end
-    elseif (vampires.den.coffin ~= nil) and vampires.den.coffin.valid then -- if it is dark and nest exists, free them
-        local denPosition = vampires.den.coffin.position
-        vampires.lord = surface.create_entity({name = "medium-vampire", -- TODO replace with scaled lord age and evolution factor
-                                               position = denPosition,
-                                               force = "vampire"})
-        local freeMinions = vampires.freeMinions
-        local newGuardRow = denPosition.x + 5
-        denPosition.x = denPosition.x - 10
-        denPosition.y = denPosition.y - 5
-        for i=1, vampires.den.guards do
-            local vamp = surface.create_entity({name = "small-vampire", -- TODO replace with scaled evolution factor
-                                                position = denPosition,
-                                                force = "vampire"})
-            freeMinions[#freeMinions+1] = vamp
-            if (denPosition.x < newGuardRow) then
-                denPosition.x = denPosition.x + 1
-            else
-                denPosition.x = denPosition.x - 10
-                denPosition.y = denPosition.y + 1
+            if (#freeMinions >= 10) then
+                formClans(vampires, surface)
             end
+            vampires.den.guards = 0
+            vampires.den.coffin.destroy()
+            vampires.den.coffin = nil
         end
-        if (#freeMinions >= 10) then
-            formClans(vampires, surface)
-        end
-        vampires.den.guards = 0
-        vampires.den.coffin.destroy()
-        vampires.den.coffin = nil
     end
     return vampires
 end
 
 function raiseVampire(event, vampires, surface)
-    surface = game.surfaces[1]
     -- if the vampire lord or coffin dies reset stats
     if (event.entity == vampires.lord) or (event.entity == vampires.den.coffin) then
         vampires.lordAge = 0
@@ -107,7 +107,6 @@ function raiseVampire(event, vampires, surface)
 end
 
 function formClans(vampires, surface)
-	surface = game.surfaces[1]
     local freeMinions = vampires.freeMinions
     local clanLeader = findValidUnit(freeMinions)
     -- pick the first unassigned valid unit
@@ -137,7 +136,6 @@ function formClans(vampires, surface)
 end
 
 function moveClans(vampires, surface)
-    surface = game.surfaces[1]
     local clans = vampires.clans
     local clanIndex = 1
     repeat
@@ -170,7 +168,6 @@ function moveClans(vampires, surface)
 end
 
 function mergeClans(vampires, surface) 
-	surface = game.surfaces[1]
     local clans = vampires.clans
     if (#clans >= 2) then
         

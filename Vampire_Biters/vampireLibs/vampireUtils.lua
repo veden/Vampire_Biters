@@ -35,3 +35,14 @@ function boundingBox(p, radius)
     return {{p.x - radius, p.y - radius},
             {p.x + radius, p.y + radius}}
 end
+
+function initializeVampireCoven()
+    return {
+             freeMinions = {},
+             minions = {},
+             clans = {},
+             den = {},
+             lordAge = 0,
+             lord = nil
+           }
+end
